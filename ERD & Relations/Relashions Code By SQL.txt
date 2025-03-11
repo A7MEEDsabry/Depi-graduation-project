@@ -1,0 +1,130 @@
+ALTER TABLE [dbo].[blinkit_orders$ExternalData_7]  
+ALTER COLUMN order_id BIGINT NOT NULL;
+ALTER TABLE [dbo].[blinkit_orders$ExternalData_7] ADD CONSTRAINT PK_blinkit_orders PRIMARY KEY (order_id);
+
+-------
+ALTER TABLE [dbo].[blinkit_customers$ExternalData_2]  
+ALTER COLUMN customer_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_customers$ExternalData_2]  
+ADD CONSTRAINT PK_blinkit_customers PRIMARY KEY (customer_id);
+------
+ALTER TABLE [dbo].[blinkit_order_items$ExternalData_6]  
+ALTER COLUMN order_id BIGINT NOT NULL;
+ALTER TABLE [dbo].[blinkit_order_items$ExternalData_6]  
+ALTER COLUMN product_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_order_items$ExternalData_6]  
+ADD CONSTRAINT PK_blinkit_order_items PRIMARY KEY (order_id, product_id);
+
+-------
+
+ALTER TABLE [dbo].[blinkit_products$ExternalData_8]  
+ALTER COLUMN product_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_products$ExternalData_8]  
+ADD CONSTRAINT PK_blinkit_products PRIMARY KEY (product_id);
+-------
+
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ALTER COLUMN feedback_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ADD CONSTRAINT PK_blinkit_customer_feedback PRIMARY KEY (feedback_id);
+-------
+DELETE FROM dbo.blinkit_inventory$
+ALTER TABLE dbo.blinkit_inventory$
+ALTER COLUMN date DATE NOT NULL;
+
+WHERE date IS NULL;
+ALTER TABLE [dbo].[blinkit_inventory$]  
+ALTER COLUMN product_id BIGINT NOT NULL;
+
+ALTER TABLE dbo.blinkit_inventory$
+ADD CONSTRAINT PK_blinkit_inventory PRIMARY KEY (product_id,date);
+
+------
+
+ALTER TABLE [dbo].[blinkit_delivery_performance$ExternalData_3]  
+ALTER COLUMN order_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_delivery_performance$ExternalData_3]  
+ADD CONSTRAINT PK_blinkit_delivery_performance PRIMARY KEY (order_id);
+----
+------------------------------------------------------
+ALTER TABLE [dbo].[blinkit_orders$ExternalData_7]  
+ALTER COLUMN customer_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_orders$ExternalData_7]  
+ADD CONSTRAINT FK_orders_customers  
+FOREIGN KEY (customer_id) REFERENCES [dbo].[blinkit_customers$ExternalData_2] (customer_id);
+
+------------
+
+
+ALTER TABLE [dbo].[blinkit_order_items$ExternalData_6]  
+ADD CONSTRAINT FK_order_items_orders  
+FOREIGN KEY (order_id) REFERENCES [dbo].[blinkit_orders$ExternalData_7] (order_id); 
+-------
+
+ALTER TABLE [dbo].[blinkit_order_items$ExternalData_6]  
+ADD CONSTRAINT FK_order_items_products  
+FOREIGN KEY (product_id) REFERENCES [dbo].[blinkit_products$ExternalData_8] (product_id);
+
+------------
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ALTER COLUMN customer_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ADD CONSTRAINT FK_feedback_customers  
+FOREIGN KEY (customer_id) REFERENCES [dbo].[blinkit_customers$ExternalData_2] (customer_id);
+------------
+
+ALTER TABLE [dbo].[blinkit_inventory$]  
+ADD CONSTRAINT FK_inventory_products  
+FOREIGN KEY (product_id) REFERENCES [dbo].[blinkit_products$ExternalData_8] (product_id);
+------------
+
+ALTER TABLE [dbo].[blinkit_delivery_performance$ExternalData_3]  
+ADD CONSTRAINT FK_delivery_performance_orders  
+FOREIGN KEY (order_id) REFERENCES [dbo].[blinkit_orders$ExternalData_7] (order_id);
+
+-----------------
+ALTER TABLE blinkit_marketing_performance$ExternalData_5                                           
+ADD customer_id INT  ; 
+
+UPDATE blinkit_marketing_performance$ExternalData_5
+SET customer_id = (SELECT TOP 1 customer_id FROM blinkit_customers$ExternalData_2 ORDER BY NEWID())
+WHERE customer_id IS NULL;
+
+ALTER TABLE blinkit_marketing_performance$ExternalData_5
+ALTER COLUMN customer_id INT NOT NULL;
+
+ALTER TABLE blinkit_marketing_performance$ExternalData_5
+ALTER COLUMN customer_id BIGINT NOT NULL;
+
+ALTER TABLE blinkit_marketing_performance$ExternalData_5
+ADD CONSTRAINT FK_marketing_customers FOREIGN KEY (customer_id)
+REFERENCES blinkit_customers$ExternalData_2(customer_id);
+
+
+
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ALTER COLUMN order_id BIGINT NOT NULL;
+
+ALTER TABLE [dbo].[blinkit_customer_feedback$ExternalData_1]  
+ADD CONSTRAINT FK_customers_feedback_orders  
+FOREIGN KEY (order_id) REFERENCES [dbo].[blinkit_orders$ExternalData_7] (order_id);
+
+SELECT      --عشان تشوف العلاقات بين الجداول
+    fk.name AS ForeignKey,
+    tp.name AS TableName,
+    cp.name AS ColumnName,
+    ref.name AS ReferencedTable,
+    cref.name AS ReferencedColumn
+FROM sys.foreign_keys AS fk
+INNER JOIN sys.foreign_key_columns AS fkc ON fk.object_id = fkc.constraint_object_id
+INNER JOIN sys.tables AS tp ON fk.parent_object_id = tp.object_id
+INNER JOIN sys.columns AS cp ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
+INNER JOIN sys.tables AS ref ON fk.referenced_object_id = ref.object_id
+INNER JOIN sys.columns AS cref ON fkc.referenced_object_id = cref.object_id AND fkc.referenced_column_id = cref.column_id;
